@@ -50,4 +50,14 @@ class User extends Authenticatable
         $users = DB::select('select * from user where activate = ?', array('1'));
         return $users;
     }
+
+    /**
+     * @array $user
+     * @return string
+     */
+    public function addUser($user)
+    {
+        DB::table('user')->insert($user);
+        return true;
+    }
 }

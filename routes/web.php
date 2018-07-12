@@ -19,7 +19,14 @@ Route::get('/', function () {
 //    return 'User ' . $id;
 //});
 
-Route::get('user/all', 'UserController@getUserList')->name('user_list');
+Route::get('user/all', 'UserController@getUserList')->name('user_list')->middleware('auth');
 
-Route::get('user/{id}', 'UserController@showProfile')->name('profile');
+Route::get('user/add', 'UserController@create');
 
+Route::post('user/add', 'UserController@created')->middleware('auth');
+
+Route::get('user/{id}', 'UserController@showProfile')->name('profile')->middleware('auth');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
