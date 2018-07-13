@@ -60,4 +60,12 @@ class User extends Authenticatable
         DB::table('user')->insert($user);
         return true;
     }
+
+    public function updateUser($user)
+    {
+        DB::table('user')
+          ->where('id', $user['id'])
+          ->update($user);
+        return true;
+    }
 }

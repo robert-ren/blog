@@ -15,7 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\User;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use Illuminate\Validation\Rule;
 
 
 class UserController extends Controller
@@ -32,9 +34,9 @@ class UserController extends Controller
         //find username by id
         $user = $this->user_mode->getUserById($id);
         if ($user) {
-            return view('welcome', array('name' => sprintf('%s %s', $user->first_name, $user->last_name)));
+            return view('user', array('user' => $user));
         }
-        return view('welcome');
+        return view('user');
     }
 
     public function getUserList()
@@ -47,11 +49,6 @@ class UserController extends Controller
         return view('userList', array('users' => array()));
     }
 
-    public function create()
-    {
-        return view('userList');
-    }
-
     /**
      * custom the validator
      *
@@ -59,14 +56,49 @@ class UserController extends Controller
      * @param null $message
      * @return \Illuminate\Contracts\Validation\Validator
      */
-    public function validator(array $data, $message = null)
+    public function validatorRegister(array $data, $message = null)
     {
         return Validator::make($data, [
           'first_name' => 'required|string|max:255',
           'last_name' => 'required|string|max:255',
           'email' => 'required|string|email|max:255|unique:user',
           'password' => 'required|string|min:6|confirmed',
+          'password_confirmation' => 'required|same:password'
         ], $message);
+    }
+
+    /**
+     * custom update user validator
+     *
+     * @param array $data
+     * @param null $message
+     * @param null $id
+     * @return \Illuminate\Contracts\Validation\Validator
+     */
+    public function validatorUpdate(array $data, $message = null, $id = null)
+    {
+        return Validator::make($data, [
+          'first_name' => 'required|string|max:255',
+          'last_name' => 'required|string|max:255',
+          'email' => ['required', Rule::unique('user')->ignore($id)]
+        ], $message);
+    }
+
+    /**
+     * custom update pasword validator
+     *
+     * @param array $data
+     * @param null $message
+     * @return \Illuminate\Contracts\Validation\Validator
+     */
+    public function validatorPassword(array $data, $message = null)
+    {
+        $rules = array(
+          'old_password' => 'required|string|min:6',
+          'password' => 'required|string|min:6|different:old_password',
+          'password_confirmation' => 'required|same:password'
+        );
+        return Validator::make($data, $rules, $message);
     }
 
     /**
@@ -77,20 +109,19 @@ class UserController extends Controller
     public function messages()
     {
         return [
-          'email.required' => 'You must input email11',
+          'email.required' => 'You must input email',
           'email.unique' => 'Duplicated User!',
-          'password.required' => 'You must input password22'
+          'password.required' => 'You must input password',
+          'password_confirmation.same' => 'Input password is not same',
+          'old_password.different' => 'New password should not same with Old password',
         ];
     }
 
-    public function created(Request $request)
+    public function create(Request $request)
     {
         $currentTime = new \DateTime();
 
-        $this->validator($request->all(), $this->messages())->validate();
-
-        var_dump($request->all());
-        die();
+        $this->validatorRegister($request->all(), $this->messages())->validate();
 
         $user = array(
           'title' => $request->title,
@@ -105,12 +136,63 @@ class UserController extends Controller
           'updated_at' => $currentTime
         );
 
-
+        $users = $this->user_mode->getAllUser();
         if ($this->user_mode->addUser($user)) {
             $users = $this->user_mode->getAllUser();
-            return redirect()->route('user_list', array('users' => $users));
         };
-        $users = $this->user_mode->getAllUser();
         return view('userList', array('users' => $users));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $currentTime = new \DateTime();
+
+        $this->validatorUpdate($request->all(), $this->messages(), $id)->validate();
+
+        $user = array(
+          'id' => $id,
+          'title' => $request->title,
+          'first_name' => $request->first_name,
+          'last_name' => $request->last_name,
+          'email' => $request->email,
+          'username' => $request->email,
+          'gender' => $request->gender,
+          'activate' => $request->activate,
+          'updated_at' => $currentTime
+        );
+
+        $users = $this->user_mode->getAllUser();
+        if ($this->user_mode->updateUser($user)) {
+            $users = $this->user_mode->getAllUser();
+        };
+        return view('userList', array('users' => $users));
+    }
+
+    public function updatePassword(Request $request, $id)
+    {
+        $currentTime = new \DateTime();
+
+        $user = $this->user_mode->getUserById($id);
+
+        // verify the new password and re-type new password
+        $this->validatorPassword($request->all(), $this->messages())->validate();
+
+        $rules = array('old_password' => 'required');
+        $validator = Validator::make($request->all(), $rules);
+
+        if (!(Hash::check($request->get('old_password'), $user->password))) {
+            $validator->getMessageBag()->add('old_password', 'Password is invalid');
+            return redirect()->back()->withErrors($validator);
+        }
+
+        $user = array(
+          'id' => $id,
+          'password' => Hash::make($request->password),
+          'updated_at' => $currentTime
+        );
+        if ($this->user_mode->updateUser($user)) {
+            return redirect()->back()->with('success', 'Password updated successfully');
+        };
+        return redirect()->back()->withErrors($validator);
     }
 }

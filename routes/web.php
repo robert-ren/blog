@@ -19,13 +19,15 @@ Route::get('/', function () {
 //    return 'User ' . $id;
 //});
 
-Route::get('user/all', 'UserController@getUserList')->name('user_list')->middleware('auth');
+Route::get('user/all', 'UserController@getUserList')->name('userList')->middleware('auth');
 
-Route::get('user/add', 'UserController@create');
-
-Route::post('user/add', 'UserController@created')->middleware('auth');
+Route::post('user/add', 'UserController@create')->name('userCreate')->middleware('auth');
 
 Route::get('user/{id}', 'UserController@showProfile')->name('profile')->middleware('auth');
+
+Route::post('user/{id}', 'UserController@update')->name('userUpdate')->middleware('auth');
+
+Route::post('password/{id}', 'UserController@updatePassword')->name('passwordUpdate')->middleware('auth');
 
 Auth::routes();
 
