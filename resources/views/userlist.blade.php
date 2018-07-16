@@ -2,6 +2,9 @@
 
 @section('content')
     <div class="container">
+        <nav class="breadcrumb">
+            <a class="breadcrumb-item" href="{{route('userList')}}">{{  __('User List')}}</a>
+        </nav>
         <div class="row justify-content-center">
             <div class="col-10">
                 <div class="card">

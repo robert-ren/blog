@@ -62,7 +62,7 @@ class UserController extends Controller
           'first_name' => 'required|string|max:255',
           'last_name' => 'required|string|max:255',
           'email' => 'required|string|email|max:255|unique:user',
-          'password' => 'required|string|min:6|confirmed',
+          'password' => 'required|string|min:6',
           'password_confirmation' => 'required|same:password'
         ], $message);
     }
@@ -163,9 +163,9 @@ class UserController extends Controller
 
         $users = $this->user_mode->getAllUser();
         if ($this->user_mode->updateUser($user)) {
-            $users = $this->user_mode->getAllUser();
+            return redirect()->back()->with('user_success', 'User updated successfully');
         };
-        return view('userList', array('users' => $users));
+        return redirect()->back();
     }
 
     public function updatePassword(Request $request, $id)
@@ -191,7 +191,7 @@ class UserController extends Controller
           'updated_at' => $currentTime
         );
         if ($this->user_mode->updateUser($user)) {
-            return redirect()->back()->with('success', 'Password updated successfully');
+            return redirect()->back()->with('password_success', 'Password updated successfully');
         };
         return redirect()->back()->withErrors($validator);
     }

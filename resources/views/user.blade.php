@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('content')
     <div class="container">
+        <nav class="breadcrumb">
+            <a class="breadcrumb-item" href="{{route('userList')}}">{{  __('User List')}}</a>
+            <a class="breadcrumb-item active"
+               href="{{route('profile',$user->id)}}">{{$user->first_name.' '.$user->last_name}}</a>
+        </nav>
         <div class="row justify-content-center">
             <div class="col-10">
                 <div class="card">
@@ -10,6 +15,11 @@
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     </form>
                     <div class="card-body">
+                        @if (session('user_success'))
+                            <div class="alert alert-success">
+                                {{ session('user_success') }}
+                            </div>
+                        @endif
                         <form action="{{route('userUpdate',$user->id)}}" method="post">
                             {{ csrf_field() }}
                             <div class="form-group row">
@@ -107,12 +117,12 @@
                         <input type="hidden" name="_method" value="PUT">
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     </form>
-                    @if (session('success'))
-                        <div class="alert alert-success">
-                            {{ session('success') }}
-                        </div>
-                    @endif
                     <div class="card-body">
+                        @if (session('password_success'))
+                            <div class="alert alert-success">
+                                {{ session('password_success') }}
+                            </div>
+                        @endif
                         <form action="{{route('passwordUpdate',$user->id)}}" method="post">
                             {{ csrf_field() }}
                             <div class="form-group row">
